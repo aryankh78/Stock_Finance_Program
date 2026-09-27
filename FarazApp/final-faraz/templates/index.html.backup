@@ -1,0 +1,3276 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم سیگنالینگ بورس ایران - Faraz Energy Project</title>
+    
+    <!-- Bootstrap CSS (RTL version) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Plotly.js - Primary CDN -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js" crossorigin="anonymous"></script>
+    <!-- Plotly.js - Fallback CDN -->
+    <script>
+        window.Plotly || document.write('<script src="https://cdn.jsdelivr.net/npm/plotly.js@2.27.0/dist/plotly.min.js"><\/script>');
+    </script>
+    
+    <!-- Custom CSS - Neo-Financial Theme -->
+    <style>
+        /* ===========================
+           CSS Variables for Theming
+           =========================== */
+        :root {
+            /* Light Theme */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --text-muted: #999999;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+            
+            /* Accent Colors */
+            --accent-primary: #00d4ff;
+            --accent-secondary: #0088ff;
+            --accent-gold: #ffd700;
+            --success: #00ff88;
+            --danger: #ff4757;
+            --warning: #ffa502;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0088ff 100%);
+            --gradient-gold: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            --gradient-success: linear-gradient(135deg, #00ff88 0%, #00d4aa 100%);
+            --gradient-danger: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+        }
+        
+        /* Dark Theme Variables */
+        [data-theme="dark"] {
+            --bg-primary: #0a1929;
+            --bg-secondary: #132f4c;
+            --bg-card: rgba(30, 41, 54, 0.85);
+            --text-primary: #ffffff;
+            --text-secondary: #b0bec5;
+            --text-muted: #78909c;
+            --border-color: rgba(0, 212, 255, 0.2);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* ===========================
+           Global Styles
+           =========================== */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        <style>
+        body {
+            font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* ===========================
+           Animated Background
+           =========================== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* ===========================
+           Navbar - Modern Dark
+           =========================== */
+        .navbar {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .navbar-brand .icon {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+        }
+        
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .theme-toggle i {
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+        }
+        
+        /* ===========================
+           Main Container
+           =========================== */
+        .container-main {
+            margin-top: 30px;
+            margin-bottom: 30px;
+            max-width: 1400px;
+        }
+        
+        /* ===========================
+           Glassmorphism Cards
+           =========================== */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-body {
+            padding: 2rem;
+        }
+        
+        /* ===========================
+           Navigation Tabs - Modern
+           =========================== */
+        .nav-tabs {
+            border-bottom: 2px solid var(--border-color);
+            gap: 8px;
+            padding: 0 1rem;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+        
+        .nav-tabs .nav-link {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 12px 12px 0 0;
+            padding: 14px 24px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+        }
+        
+        .nav-tabs .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--accent-primary);
+            background: rgba(0, 212, 255, 0.05);
+        }
+        
+        .nav-tabs .nav-link:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .nav-tabs .nav-link.active {
+            color: var(--accent-primary);
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        .nav-tabs .nav-link.active::before {
+            transform: scaleX(1);
+        }
+        
+        /* ===========================
+           Form Controls - Enhanced
+           =========================== */
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .form-label i {
+            color: var(--accent-primary);
+        }
+        
+        .form-control, .form-select {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 18px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: var(--bg-secondary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.1), 0 0 20px rgba(0, 212, 255, 0.2);
+            color: var(--text-primary);
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* ===========================
+           Buttons - Neo Style
+           =========================== */
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+            padding: 14px 32px;
+            font-weight: 700;
+            font-size: 1rem;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+        }
+        
+        .btn-primary:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* ===========================
+           Alert Messages
+           =========================== */
+        .alert {
+            border-radius: 16px;
+            border: none;
+            padding: 1.25rem 1.5rem;
+            backdrop-filter: blur(10px);
+            animation: slideInRight 0.4s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .alert-danger {
+            background: rgba(255, 71, 87, 0.15);
+            border-right: 4px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .alert-success {
+            background: rgba(0, 255, 136, 0.15);
+            border-right: 4px solid var(--success);
+            color: var(--success);
+        }
+        
+        /* ===========================
+           Stats Cards - Modern
+           =========================== */
+        .stats-card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateX(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stats-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stats-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stats-value {
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        /* ===========================
+           Loading States - Skeleton
+           =========================== */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner-modern {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                var(--bg-secondary) 0%,
+                rgba(0, 212, 255, 0.1) 50%,
+                var(--bg-secondary) 100%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 12px;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* ===========================
+           Chart Container - Enhanced
+           =========================== */
+        #chartContainer, .chart-wrapper {
+            margin-top: 24px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+        
+        .chart-toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .chart-tool-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+        }
+        
+        .chart-tool-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* ===========================
+           Positive/Negative Colors
+           =========================== */
+        .positive {
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        .negative {
+            color: var(--danger);
+            font-weight: 700;
+        }
+        
+        .neutral {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        
+        /* ===========================
+           Badge Components
+           =========================== */
+        .badge-custom {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .badge-success {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .badge-danger {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        /* ===========================
+           Utility Classes
+           =========================== */
+        .glow {
+            box-shadow: 0 0 20px var(--accent-primary);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* ===========================
+           Symbol Search - Autocomplete
+           =========================== */
+        .symbol-search-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+        
+        .symbol-search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border-radius: 16px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .symbol-search-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.1), 0 0 30px rgba(0, 212, 255, 0.2);
+            outline: none;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent-primary);
+            font-size: 1.3rem;
+        }
+        
+        .symbol-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            margin-top: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .symbol-dropdown.show {
+            display: block;
+            animation: fadeInDown 0.3s ease-out;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .symbol-item {
+            padding: 16px 20px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        
+        .symbol-item:hover {
+            background: rgba(0, 212, 255, 0.08);
+        }
+        
+        .symbol-item:last-child {
+            border-bottom: none;
+        }
+        
+        .symbol-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+        }
+        
+        .symbol-change {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        /* ===========================
+           Enhanced Input Components
+           =========================== */
+        .input-group-modern {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .input-stepper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .stepper-btn {
+            background: transparent;
+            border: none;
+            padding: 12px 20px;
+            color: var(--accent-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .stepper-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+        
+        .stepper-value {
+            padding: 12px 24px;
+            min-width: 80px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .preset-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .chip:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        
+        .chip.active {
+            background: var(--gradient-primary);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* ===========================
+           Enhanced Stats Panel
+           =========================== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card-modern {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card-modern::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-primary);
+            opacity: 0.1;
+            border-radius: 0 0 0 100%;
+        }
+        
+        .stat-card-modern:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent-primary);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+        }
+        
+        .stat-label-modern {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value-modern {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .stat-change.up {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--success);
+        }
+        
+        .stat-change.down {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+        }
+        
+        /* ===========================
+           Mobile Responsive
+           =========================== */
+        @media (max-width: 768px) {
+            .container-main {
+                margin-top: 16px;
+                padding: 0 12px;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            .nav-tabs {
+                padding: 0 0.5rem;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 12px 16px;
+                font-size: 0.85rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                padding: 16px;
+            }
+        }
+        
+        /* ===========================
+           Signal Cards (Tab 6 Summary)
+           =========================== */
+        .signal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .signal-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .signal-card .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem;
+        }
+        
+        .signal-card .card-header h5 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        .signal-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 16px 0;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .signal-badge.positive {
+            background: linear-gradient(135deg, #00ff88 0%, #00d4aa 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 255, 136, 0.3);
+        }
+        
+        .signal-badge.negative {
+            background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255, 71, 87, 0.3);
+        }
+        
+        .signal-badge.neutral {
+            background: linear-gradient(135deg, #ffa502 0%, #ff8800 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(255, 165, 2, 0.3);
+        }
+        
+        .signal-badge.no-data {
+            background: rgba(128, 128, 128, 0.2);
+            color: var(--text-secondary);
+        }
+        
+        .signal-detail {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        #card-overall {
+            border: 2px solid var(--accent-primary);
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+        }
+        
+        #card-overall .card-header {
+            background: var(--gradient-primary);
+            color: white;
+            border-bottom: none;
+        }
+        
+        /* ===========================
+           Progress Bars
+           =========================== */
+        .progress-modern {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-bar-modern {
+            height: 100%;
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            transition: width 0.6s ease;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        /* ===========================
+           Tooltip Styles
+           =========================== */
+        .tooltip-custom {
+            position: absolute;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            z-index: 2000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .tooltip-custom.show {
+            opacity: 1;
+        }
+        
+        /* ===========================
+           Scrollbar Styling
+           =========================== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+    </style>
+</head>
+<body data-theme="dark">
+    <!-- Navbar - Modern with Theme Toggle -->
+    <nav class="navbar">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <span class="icon">📊</span>
+                <span>سیستم سیگنالینگ بورس ایران</span>
+            </span>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <span style="color: var(--text-secondary); font-size: 0.95rem;">
+                    <i class="far fa-calendar-alt"></i> {{ today }}
+                </span>
+                <button class="theme-toggle" onclick="toggleTheme()" title="تغییر تم">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span id="themeText" style="color: var(--text-primary); font-size: 0.9rem;">حالت تاریک</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container container-main">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">پنل تحلیل تکنیکال</h5>
+            </div>
+            <div class="card-body">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" 
+                                type="button" role="tab" aria-controls="tab1" aria-selected="true">
+                            📈 میانگین متحرک
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" 
+                                type="button" role="tab" aria-controls="tab2" aria-selected="false">
+                            📉 واگرایی (Divergence)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab3-tab" data-bs-toggle="tab" data-bs-target="#tab3" 
+                                type="button" role="tab" aria-controls="tab3" aria-selected="false">
+                            📊 ضریب بتا (Beta)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab4-tab" data-bs-toggle="tab" data-bs-target="#tab4" 
+                                type="button" role="tab" aria-controls="tab4" aria-selected="false">
+                            💹 حجم معاملات
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab5-tab" data-bs-toggle="tab" data-bs-target="#tab5" 
+                                type="button" role="tab" aria-controls="tab5" aria-selected="false">
+                            💰 جریان نقدینگی حقیقی
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tab6-tab" data-bs-toggle="tab" data-bs-target="#tab6" 
+                                type="button" role="tab" aria-controls="tab6" aria-selected="false">
+                            🎯 خلاصه سیگنال‌ها
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="mainTabContent">
+                    <!-- Tab 1: Moving Average -->
+                    <div class="tab-pane fade show active" id="tab1" role="tabpanel" aria-labelledby="tab1-tab">
+                        <div class="row">
+                            <div class="col-lg-4">
+                                <h6 class="mb-3">تنظیمات میانگین متحرک</h6>
+                                <form id="maForm">
+                                    <div class="mb-4">
+                                        <label for="symbol" class="form-label">
+                                            <i class="fas fa-chart-line"></i> نماد سهم
+                                        </label>
+                                        <div class="symbol-search-container">
+                                            <i class="fas fa-search search-icon"></i>
+                                            <input 
+                                                type="text" 
+                                                class="form-control symbol-search-input" 
+                                                id="symbolSearch"
+                                                placeholder="جستجوی نماد سهم..." 
+                                                autocomplete="off"
+                                                oninput="filterSymbols(this.value, 'symbolDropdown', 'symbol')"
+                                                onfocus="showSymbolDropdown('symbolDropdown')"
+                                            >
+                                            <div class="symbol-dropdown" id="symbolDropdown">
+                                                <div class="symbol-item" onclick="selectSymbol('فملی', 'symbolSearch', 'symbol', 'symbolDropdown')">
+                                                    <span class="symbol-name"><i class="fas fa-chart-line" style="color: var(--accent-primary);"></i> فملی</span>
+                                                    <span class="symbol-change positive"><i class="fas fa-fire"></i> پرمعامله</span>
+                                                </div>
+                                                <div class="symbol-item" onclick="selectSymbol('شستا', 'symbolSearch', 'symbol', 'symbolDropdown')">
+                                                    <span class="symbol-name"><i class="fas fa-chart-line" style="color: var(--accent-primary);"></i> شستا</span>
+                                                    <span class="symbol-change" style="color: var(--text-muted);"><i class="fas fa-check"></i> استاندارد</span>
+                                                </div>
+                                                <div class="symbol-item" onclick="selectSymbol('خودرو', 'symbolSearch', 'symbol', 'symbolDropdown')">
+                                                    <span class="symbol-name"><i class="fas fa-chart-line" style="color: var(--accent-primary);"></i> خودرو</span>
+                                                    <span class="symbol-change positive"><i class="fas fa-star"></i> محبوب</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <select class="form-select" id="symbol" name="symbol" required style="display: none;">
+                                            <option value="">نماد را انتخاب کنید...</option>
+                                            {% for sym in symbols %}
+                                            <option value="{{ sym }}">{{ sym }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="lookback_days" class="form-label">تعداد روزهای بازگشت</label>
+                                        <input type="number" class="form-control" id="lookback_days" 
+                                               name="lookback_days" min="2" max="1000" value="90" required>
+                                        <small class="form-text text-muted">تعداد روزهای گذشته که نمودار نمایش داده شود</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="ma_periods" class="form-label">دوره‌های میانگین متحرک</label>
+                                        <input type="text" class="form-control" id="ma_periods" 
+                                               name="ma_periods" placeholder="20,50,200" value="20" required>
+                                        <small class="form-text text-muted">جدا شده با کاما (مثال: 20,50,200)</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="timeframe" class="form-label">بازه زمانی (Timeframe)</label>
+                                        <select class="form-select" id="timeframe" name="timeframe" required>
+                                            <option value="daily" selected>روزانه (Daily)</option>
+                                            <option value="weekly">هفتگی (Weekly)</option>
+                                            <option value="monthly">ماهانه (Monthly)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="price_type" class="form-label">نوع قیمت</label>
+                                        <select class="form-select" id="price_type" name="price_type" required>
+                                            <option value="close" selected>قیمت پایانی (Close)</option>
+                                            <option value="open">قیمت باز شدن (Open)</option>
+                                            <option value="high">بالاترین قیمت (High)</option>
+                                            <option value="low">پایین‌ترین قیمت (Low)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="end_date" class="form-label">تاریخ پایان (شمسی)</label>
+                                        <input type="text" class="form-control" id="end_date" 
+                                               name="end_date" placeholder="YYYY-MM-DD" 
+                                               value="{{ today }}" required>
+                                        <small class="form-text text-muted">فرمت: YYYY-MM-DD (مثال: 1403-09-23)</small>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        🔍 محاسبه و نمایش نمودار
+                                    </button>
+                                </form>
+
+                                <!-- Enhanced Statistics -->
+                                <div id="statistics" style="display: none; margin-top: 24px;" class="slide-up">
+                                    <h6 class="mb-4" style="color: var(--accent-primary); font-weight: 700; font-size: 1.1rem;">
+                                        <i class="fas fa-chart-bar"></i> آمار و اطلاعات
+                                    </h6>
+                                    <div class="stats-grid">
+                                        <div class="stat-card-modern">
+                                            <div class="stat-icon">📊</div>
+                                            <div class="stat-label-modern">تعداد کندل‌ها</div>
+                                            <div class="stat-value-modern" id="stat-total-candles">-</div>
+                                        </div>
+                                        <div class="stat-card-modern">
+                                            <div class="stat-icon">📅</div>
+                                            <div class="stat-label-modern">تاریخ شروع</div>
+                                            <div class="stat-value-modern" style="font-size: 1.3rem;" id="stat-start-date">-</div>
+                                        </div>
+                                        <div class="stat-card-modern">
+                                            <div class="stat-icon">🏁</div>
+                                            <div class="stat-label-modern">تاریخ پایان</div>
+                                            <div class="stat-value-modern" style="font-size: 1.3rem;" id="stat-end-date">-</div>
+                                        </div>
+                                        <div class="stat-card-modern">
+                                            <div class="stat-icon">💰</div>
+                                            <div class="stat-label-modern">قیمت فعلی</div>
+                                            <div class="stat-value-modern" id="stat-current-price">-</div>
+                                        </div>
+                                        <div class="stat-card-modern" style="grid-column: span 2;">
+                                            <div class="stat-icon">📈</div>
+                                            <div class="stat-label-modern">میانگین‌های متحرک</div>
+                                            <div class="stat-value-modern" id="stat-current-ma" style="font-size: 1rem;">-</div>
+                                        </div>
+                                        <div class="stat-card-modern">
+                                            <div class="stat-icon">🎯</div>
+                                            <div class="stat-label-modern">وضعیت</div>
+                                            <div class="stat-value-modern" style="font-size: 1.1rem;" id="stat-status">-</div>
+                                        </div>
+                                        <div class="stat-card-modern">
+                                            <div class="stat-icon">📊</div>
+                                            <div class="stat-label-modern">اختلاف</div>
+                                            <div class="stat-value-modern" id="stat-percentage">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-8">
+                                <!-- Loading Spinner -->
+                                <div class="loading" id="loading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                    <p class="mt-3">در حال دریافت داده‌ها و محاسبات...</p>
+                                </div>
+
+                                <!-- Error Alert -->
+                                <div class="alert alert-danger" id="errorAlert" style="display: none;" role="alert">
+                                    <strong>خطا!</strong> <span id="errorMessage"></span>
+                                </div>
+
+                                <!-- Enhanced Chart Container with Toolbar -->
+                                <div id="chartContainer" style="display: none;" class="chart-wrapper fade-in">
+                                    <div class="chart-toolbar">
+                                        <button class="chart-tool-btn" onclick="exportChart('chart')" title="ذخیره به عنوان تصویر">
+                                            <i class="fas fa-download"></i> ذخیره
+                                        </button>
+                                        <button class="chart-tool-btn" onclick="fullscreenChart('chartContainer')" title="نمایش تمام صفحه">
+                                            <i class="fas fa-expand"></i> تمام صفحه
+                                        </button>
+                                        <button class="chart-tool-btn" onclick="resetChart('chart')" title="بازنشانی نمودار">
+                                            <i class="fas fa-undo"></i> بازنشانی
+                                        </button>
+                                        <button class="chart-tool-btn" onclick="location.reload()" title="بارگذاری مجدد">
+                                            <i class="fas fa-sync-alt"></i> بروزرسانی
+                                        </button>
+                                    </div>
+                                    <div id="chart"></div>
+                                </div>
+
+                                <!-- Initial Message -->
+                                <div id="initialMessage" class="placeholder-tab">
+                                    <div style="font-size: 4rem; margin-bottom: 20px;">📈</div>
+                                    <h5>نمودار میانگین متحرک</h5>
+                                    <p>لطفاً تنظیمات را در سمت راست انجام دهید و دکمه محاسبه را بزنید</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Divergence -->
+                    <div class="tab-pane fade" id="tab2" role="tabpanel" aria-labelledby="tab2-tab">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <h6 class="mb-3">تنظیمات واگرایی</h6>
+                                <form id="divergenceForm">
+                                    <div class="mb-3">
+                                        <label for="div_symbol" class="form-label">نماد سهم</label>
+                                        <select class="form-select" id="div_symbol" name="symbol" required>
+                                            <option value="">نماد را انتخاب کنید...</option>
+                                            {% for sym in symbols %}
+                                            <option value="{{ sym }}">{{ sym }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="div_lookback_days" class="form-label">تعداد روزهای بازگشت</label>
+                                        <input type="number" class="form-control" id="div_lookback_days" 
+                                               name="lookback_days" min="60" max="500" value="120" required>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="div_end_date" class="form-label">تاریخ پایان</label>
+                                        <input type="text" class="form-control" id="div_end_date" 
+                                               name="end_date" placeholder="YYYY-MM-DD" 
+                                               value="{{ today }}" required>
+                                    </div>
+
+                                    <hr>
+                                    <h6>تنظیمات RSI</h6>
+
+                                    <div class="mb-3">
+                                        <label for="rsi_period" class="form-label">دوره RSI</label>
+                                        <input type="number" class="form-control" id="rsi_period" 
+                                               name="rsi_period" min="5" max="50" value="14">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rsi_overbought" class="form-label">سطح اشباع خرید</label>
+                                        <input type="number" class="form-control" id="rsi_overbought" 
+                                               name="rsi_overbought" min="50" max="90" value="70">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rsi_oversold" class="form-label">سطح اشباع فروش</label>
+                                        <input type="number" class="form-control" id="rsi_oversold" 
+                                               name="rsi_oversold" min="10" max="50" value="30">
+                                    </div>
+
+                                    <hr>
+                                    <h6>تنظیمات MACD</h6>
+
+                                    <div class="mb-3">
+                                        <label for="macd_short" class="form-label">دوره کوتاه</label>
+                                        <input type="number" class="form-control" id="macd_short" 
+                                               name="macd_short" min="5" max="50" value="12">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="macd_long" class="form-label">دوره بلند</label>
+                                        <input type="number" class="form-control" id="macd_long" 
+                                               name="macd_long" min="10" max="100" value="26">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="macd_signal" class="form-label">دوره سیگنال</label>
+                                        <input type="number" class="form-control" id="macd_signal" 
+                                               name="macd_signal" min="5" max="50" value="9">
+                                    </div>
+
+                                    <hr>
+                                    <h6>تنظیمات MFI (Money Flow Index)</h6>
+
+                                    <div class="mb-3">
+                                        <label for="mfi_period" class="form-label">دوره MFI</label>
+                                        <input type="number" class="form-control" id="mfi_period" 
+                                               name="mfi_period" min="5" max="50" value="14">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="mfi_overbought" class="form-label">سطح اشباع خرید</label>
+                                        <input type="number" class="form-control" id="mfi_overbought" 
+                                               name="mfi_overbought" min="50" max="95" value="80">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="mfi_oversold" class="form-label">سطح اشباع فروش</label>
+                                        <input type="number" class="form-control" id="mfi_oversold" 
+                                               name="mfi_oversold" min="5" max="50" value="20">
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="mb-3">
+                                        <label for="div_timeframe" class="form-label">بازه زمانی</label>
+                                        <select class="form-select" id="div_timeframe" name="timeframe">
+                                            <option value="daily" selected>روزانه</option>
+                                            <option value="weekly">هفتگی</option>
+                                            <option value="monthly">ماهانه</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="div_price_type" class="form-label">نوع قیمت</label>
+                                        <select class="form-select" id="div_price_type" name="price_type">
+                                            <option value="close" selected>قیمت پایانی</option>
+                                            <option value="open">قیمت باز شدن</option>
+                                            <option value="high">بالاترین قیمت</option>
+                                            <option value="low">پایین‌ترین قیمت</option>
+                                        </select>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        🔍 محاسبه واگرایی
+                                    </button>
+                                </form>
+
+                                <!-- Statistics -->
+                                <div id="divergenceStats" style="display: none; margin-top: 30px;">
+                                    <h6 class="mb-3">نتایج واگرایی</h6>
+                                    <div class="stats-card">
+                                        <div class="stats-label">تعداد کندل‌ها</div>
+                                        <div class="stats-value" id="div-stat-candles">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">واگرایی نزولی RSI</div>
+                                        <div class="stats-value negative" id="div-stat-rsi-bearish">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">واگرایی صعودی RSI</div>
+                                        <div class="stats-value positive" id="div-stat-rsi-bullish">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">واگرایی نزولی MACD</div>
+                                        <div class="stats-value negative" id="div-stat-macd-bearish">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">واگرایی صعودی MACD</div>
+                                        <div class="stats-value positive" id="div-stat-macd-bullish">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">RSI فعلی</div>
+                                        <div class="stats-value" id="div-stat-rsi-current">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">MACD فعلی</div>
+                                        <div class="stats-value" id="div-stat-macd-current">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">واگرایی نزولی MFI</div>
+                                        <div class="stats-value negative" id="div-stat-mfi-bearish">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">واگرایی صعودی MFI</div>
+                                        <div class="stats-value positive" id="div-stat-mfi-bullish">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">MFI فعلی</div>
+                                        <div class="stats-value" id="div-stat-mfi-current">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-9">
+                                <!-- Loading -->
+                                <div class="loading" id="divergenceLoading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                    <p class="mt-3">در حال محاسبات واگرایی...</p>
+                                </div>
+
+                                <!-- Error -->
+                                <div class="alert alert-danger" id="divergenceError" style="display: none;" role="alert">
+                                    <strong>خطا!</strong> <span id="divergenceErrorMessage"></span>
+                                </div>
+
+                                <!-- Charts Container -->
+                                <div id="divergenceChartsContainer" style="display: none;">
+                                    <div id="rsiChartContainer" class="mb-4">
+                                        <h5>نمودار RSI با واگرایی‌ها</h5>
+                                        <div id="rsiChart"></div>
+                                    </div>
+
+                                    <div id="macdChartContainer" class="mb-4">
+                                        <h5>نمودار MACD با واگرایی‌ها</h5>
+                                        <div id="macdChart"></div>
+                                    </div>
+
+                                    <div id="mfiChartContainer">
+                                        <h5>نمودار MFI با واگرایی‌ها</h5>
+                                        <div id="mfiChart"></div>
+                                    </div>
+
+                                    <!-- Divergence Details -->
+                                    <div id="divergenceDetails" class="mt-4">
+                                        <h5>جزئیات واگرایی‌ها</h5>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-header bg-danger text-white">
+                                                        واگرایی‌های نزولی (Bearish)
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="bearishDetails"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-header bg-success text-white">
+                                                        واگرایی‌های صعودی (Bullish)
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div id="bullishDetails"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Initial Message -->
+                                <div id="divergenceInitialMessage" class="placeholder-tab">
+                                    <div style="font-size: 4rem; margin-bottom: 20px;">📉</div>
+                                    <h5>تحلیل واگرایی RSI و MACD</h5>
+                                    <p>لطفاً تنظیمات را انجام دهید و دکمه محاسبه را بزنید</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Beta Coefficient -->
+                    <div class="tab-pane fade" id="tab3" role="tabpanel" aria-labelledby="tab3-tab">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <h6 class="mb-3">تنظیمات ضریب بتا</h6>
+                                <form id="betaForm">
+                                    <div class="mb-3">
+                                        <label for="beta_symbol" class="form-label">نماد سهم</label>
+                                        <select class="form-select" id="beta_symbol" name="symbol" required>
+                                            <option value="">نماد را انتخاب کنید...</option>
+                                            {% for sym in symbols %}
+                                            <option value="{{ sym }}">{{ sym }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="market_symbol" class="form-label">نماد بازار (شاخص)</label>
+                                        <select class="form-select" id="market_symbol" name="market_symbol" required>
+                                            <option value="شاخص کل" selected>شاخص کل (CWI)</option>
+                                            <option value="شاخص کل هم وزن">شاخص کل هم وزن (EWI)</option>
+                                        </select>
+                                        <small class="form-text text-muted">معمولاً "شاخص کل" برای مقایسه با بازار</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="beta_period" class="form-label">دوره محاسبه بتا (روز)</label>
+                                        <input type="number" class="form-control" id="beta_period" 
+                                               name="beta_period" min="30" max="1500" value="750" required>
+                                        <small class="form-text text-muted">پیش‌فرض: 750 روز (≈36 ماه)</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="return_period" class="form-label">دوره محاسبه بازده (روز)</label>
+                                        <input type="number" class="form-control" id="return_period" 
+                                               name="return_period" min="5" max="200" value="30" required>
+                                        <small class="form-text text-muted">دوره محاسبه بازده واقعی</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="threshold" class="form-label">آستانه نسبت بازده</label>
+                                        <input type="number" class="form-control" id="threshold" 
+                                               name="threshold" step="0.1" value="1.0">
+                                        <small class="form-text text-muted">سیگنال مثبت اگر نسبت >= آستانه (پیش‌فرض: 1.0)</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="beta_timeframe" class="form-label">بازه زمانی</label>
+                                        <select class="form-select" id="beta_timeframe" name="timeframe">
+                                            <option value="daily" selected>روزانه</option>
+                                            <option value="weekly">هفتگی</option>
+                                            <option value="monthly">ماهانه</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="beta_price_type" class="form-label">نوع قیمت</label>
+                                        <select class="form-select" id="beta_price_type" name="price_type">
+                                            <option value="close" selected>قیمت پایانی</option>
+                                            <option value="open">قیمت باز شدن</option>
+                                            <option value="high">بالاترین قیمت</option>
+                                            <option value="low">پایین‌ترین قیمت</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="beta_end_date" class="form-label">تاریخ پایان</label>
+                                        <input type="text" class="form-control" id="beta_end_date" 
+                                               name="end_date" placeholder="YYYY-MM-DD" 
+                                               value="{{ today }}" required>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        🔍 محاسبه ضریب بتا
+                                    </button>
+                                </form>
+
+                                <!-- Statistics -->
+                                <div id="betaStats" style="display: none; margin-top: 30px;">
+                                    <h6 class="mb-3" style="color: var(--accent-primary);">
+                                        <i class="fas fa-chart-line"></i> نتایج تحلیل بتا
+                                    </h6>
+                                    
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title">ضریب بتا (β)</h6>
+                                            <h3 id="beta-stat-value" class="mb-2" style="color: var(--accent-primary);">-</h3>
+                                            <p id="beta-stat-interpretation" class="text-muted mb-0" style="font-size: 0.9rem;">-</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="stats-card">
+                                        <div class="stats-label">بازده واقعی</div>
+                                        <div class="stats-value" id="beta-stat-actual">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">بازده مورد انتظار</div>
+                                        <div class="stats-value" id="beta-stat-expected">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">بازده بازار</div>
+                                        <div class="stats-value" id="beta-stat-market">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">نسبت (واقعی/انتظار)</div>
+                                        <div class="stats-value" id="beta-stat-ratio">-</div>
+                                    </div>
+                                    
+                                    <div class="card mt-3">
+                                        <div class="card-body">
+                                            <h6 class="card-title">سیگنال نهایی</h6>
+                                            <div class="signal-badge" id="beta-signal-badge">-</div>
+                                            <p id="beta-performance-interpretation" class="mt-2 mb-0" style="font-size: 0.9rem;">-</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-9">
+                                <!-- Loading -->
+                                <div class="loading" id="betaLoading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                    <p class="mt-3">در حال محاسبات ضریب بتا...</p>
+                                </div>
+
+                                <!-- Error -->
+                                <div class="alert alert-danger" id="betaError" style="display: none;" role="alert">
+                                    <strong>خطا!</strong> <span id="betaErrorMessage"></span>
+                                </div>
+
+                                <!-- Chart Container -->
+                                <div id="betaChartContainer" style="display: none;">
+                                    <div id="betaChart"></div>
+                                    
+                                </div>
+
+                                <!-- Initial Message -->
+                                <div id="betaInitialMessage">
+                                    <div class="placeholder-tab">
+                                        <div style="font-size: 4rem; margin-bottom: 20px;">📊</div>
+                                        <h5>تحلیل ضریب بتا (بدون نمودار)</h5>
+                                        <p>لطفاً تنظیمات را انجام دهید و دکمه محاسبه را بزنید</p>
+                                    </div>
+                                    
+                                    <div class="card mt-4">
+                                        <div class="card-body">
+                                            <h6 style="color: var(--accent-primary);"><i class="fas fa-lightbulb"></i> توضیحات</h6>
+                                            <p style="font-size: 0.95rem; line-height: 1.7;">
+                                                <strong>ضریب بتا:</strong> معیار نوسان‌پذیری سهم نسبت به کل بازار. 
+                                                بتا با استفاده از داده‌های بلندمدت (پیش‌فرض 750 روز معادل 36 ماه) محاسبه می‌شود و به عنوان یک مقدار ثابت در نظر گرفته می‌شود.
+                                            </p>
+                                            <p style="font-size: 0.95rem; line-height: 1.7;">
+                                                <strong>مقایسه بازده:</strong> بازده واقعی سهم در دوره کوتاه‌تر (پیش‌فرض 30 روز) 
+                                                با بازده مورد انتظار (بتا × بازده بازار) مقایسه می‌شود.
+                                            </p>
+                                            <p style="font-size: 0.95rem; line-height: 1.7;">
+                                                <strong>نسبت بازده:</strong> بازده واقعی / بازده مورد انتظار. 
+                                                اگر این نسبت بیشتر از 1 باشد، سهم بهتر از حد انتظار عمل کرده است.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 4: Trading Volume -->
+                    <div class="tab-pane fade" id="tab4" role="tabpanel" aria-labelledby="tab4-tab">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <h6 class="mb-3">تنظیمات حجم معاملات</h6>
+                                <form id="volumeForm">
+                                    <div class="mb-3">
+                                        <label for="volume_symbol" class="form-label">نماد سهم</label>
+                                        <select class="form-select" id="volume_symbol" name="symbol" required>
+                                            <option value="">نماد را انتخاب کنید...</option>
+                                            {% for sym in symbols %}
+                                            <option value="{{ sym }}">{{ sym }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="volume_lookback_days" class="form-label">تعداد روزهای بازگشت</label>
+                                        <input type="number" class="form-control" id="volume_lookback_days" 
+                                               name="lookback_days" min="30" max="500" value="90" required>
+                                        <small class="form-text text-muted">تعداد روزهای گذشته که نمودار نمایش داده شود</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="volume_ma_periods" class="form-label">دوره‌های میانگین حجم</label>
+                                        <input type="text" class="form-control" id="volume_ma_periods" 
+                                               name="volume_ma_periods" placeholder="20,50" value="30" required>
+                                        <small class="form-text text-muted">جدا شده با کاما (مثال: 20,50,100)</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="volume_timeframe" class="form-label">بازه زمانی</label>
+                                        <select class="form-select" id="volume_timeframe" name="timeframe">
+                                            <option value="daily" selected>روزانه</option>
+                                            <option value="weekly">هفتگی</option>
+                                            <option value="monthly">ماهانه</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="volume_end_date" class="form-label">تاریخ پایان (شمسی)</label>
+                                        <input type="text" class="form-control" id="volume_end_date" 
+                                               name="end_date" placeholder="YYYY-MM-DD" 
+                                               value="{{ today }}" required>
+                                        <small class="form-text text-muted">فرمت: YYYY-MM-DD (مثال: 1403-09-23)</small>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        🔍 محاسبه و نمایش نمودار
+                                    </button>
+                                </form>
+
+                                <!-- Statistics -->
+                                <div id="volumeStats" style="display: none; margin-top: 30px;">
+                                    <h6 class="mb-3">آمار و اطلاعات</h6>
+                                    <div class="stats-card">
+                                        <div class="stats-label">تعداد روزها</div>
+                                        <div class="stats-value" id="volume-stat-days">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">تاریخ شروع</div>
+                                        <div class="stats-value" id="volume-stat-start">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">تاریخ پایان</div>
+                                        <div class="stats-value" id="volume-stat-end">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">حجم آخرین روز</div>
+                                        <div class="stats-value" id="volume-stat-latest">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">میانگین حجم</div>
+                                        <div class="stats-value" id="volume-stat-avg">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">حداکثر حجم</div>
+                                        <div class="stats-value" id="volume-stat-max">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">حداقل حجم</div>
+                                        <div class="stats-value" id="volume-stat-min">-</div>
+                                    </div>
+                                    <div class="stats-card" style="grid-column: span 2;">
+                                        <div class="stats-label">میانگین‌های حجم</div>
+                                        <div class="stats-value" id="volume-stat-mas" style="font-size: 0.9rem;">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">وضعیت آخرین روز</div>
+                                        <div class="stats-value" id="volume-stat-status">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">اختلاف درصدی</div>
+                                        <div class="stats-value" id="volume-stat-diff">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-9">
+                                <!-- Loading -->
+                                <div class="loading" id="volumeLoading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                    <p class="mt-3">در حال محاسبات حجم معاملات...</p>
+                                </div>
+
+                                <!-- Error -->
+                                <div class="alert alert-danger" id="volumeError" style="display: none;" role="alert">
+                                    <strong>خطا!</strong> <span id="volumeErrorMessage"></span>
+                                </div>
+
+                                <!-- Chart Container -->
+                                <div id="volumeChartContainer" style="display: none;">
+                                    <div id="volumeChart"></div>
+                                    
+                                    <div class="mt-4">
+                                        <h5>تفسیر حجم معاملات:</h5>
+                                        <ul>
+                                            <li><strong>حجم بالاتر از میانگین:</strong> افزایش علاقه بازار و فعالیت معاملاتی</li>
+                                            <li><strong>حجم پایین‌تر از میانگین:</strong> کاهش علاقه بازار و فعالیت معاملاتی</li>
+                                            <li><strong>حجم خیلی بالا (بیش از 2 برابر میانگین):</strong> احتمال اخبار مهم یا نقطه عطف قیمتی</li>
+                                            <li><strong>حجم خیلی پایین (کمتر از نصف میانگین):</strong> نقدینگی پایین، احتیاط در معامله</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Initial Message -->
+                                <div id="volumeInitialMessage" class="placeholder-tab">
+                                    <div style="font-size: 4rem; margin-bottom: 20px;">💹</div>
+                                    <h5>تحلیل حجم معاملات</h5>
+                                    <p>لطفاً تنظیمات را انجام دهید و دکمه محاسبه را بزنید</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 5: Real Money Flow -->
+                    <div class="tab-pane fade" id="tab5" role="tabpanel" aria-labelledby="tab5-tab">
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <h6 class="mb-3">تنظیمات جریان نقدینگی حقیقی</h6>
+                                <form id="rmfForm">
+                                    <div class="mb-3">
+                                        <label for="rmf_symbol" class="form-label">نماد سهم</label>
+                                        <select class="form-select" id="rmf_symbol" name="symbol" required>
+                                            <option value="">نماد را انتخاب کنید...</option>
+                                            {% for sym in symbols %}
+                                            <option value="{{ sym }}">{{ sym }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rmf_lookback_days" class="form-label">تعداد روزهای بازگشت</label>
+                                        <input type="number" class="form-control" id="rmf_lookback_days" 
+                                               name="lookback_days" min="10" max="200" value="30" required>
+                                        <small class="form-text text-muted">تعداد روزهای داده برای تحلیل</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="power_ma_period" class="form-label">دوره میانگین قدرت خریدار</label>
+                                        <input type="number" class="form-control" id="power_ma_period" 
+                                               name="power_ma_period" min="5" max="50" value="20" required>
+                                        <small class="form-text text-muted">تعداد روزهای محاسبه میانگین وزن‌دار</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rmf_timeframe" class="form-label">بازه زمانی</label>
+                                        <select class="form-select" id="rmf_timeframe" name="timeframe">
+                                            <option value="daily" selected>روزانه</option>
+                                            <option value="weekly">هفتگی</option>
+                                            <option value="monthly">ماهانه</option>
+                                        </select>
+                                        <small class="form-text text-muted">توجه: داده‌های RMF فقط روزانه موجود است</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="rmf_end_date" class="form-label">تاریخ پایان (شمسی)</label>
+                                        <input type="text" class="form-control" id="rmf_end_date" 
+                                               name="end_date" placeholder="YYYY-MM-DD" 
+                                               value="{{ today }}" required>
+                                        <small class="form-text text-muted">فرمت: YYYY-MM-DD (مثال: 1403-09-23)</small>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        🔍 محاسبه جریان نقدینگی
+                                    </button>
+                                </form>
+
+                                <!-- Statistics -->
+                                <div id="rmfStats" style="display: none; margin-top: 30px;">
+                                    <h6 class="mb-3" style="color: var(--accent-primary);">
+                                        <i class="fas fa-chart-line"></i> نتایج تحلیل
+                                    </h6>
+                                    
+                                    <!-- 3 Separate Signals -->
+                                    <div class="card mb-3">
+                                        <div class="card-header" style="background: var(--gradient-primary); color: white;">
+                                            <strong>سیگنال‌های جداگانه</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="mb-2">
+                                                <strong>1. قدرت خریدار:</strong> <span id="rmf-signal-1" class="badge">-</span>
+                                                <br><small id="rmf-signal-1-text" class="text-muted">-</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <strong>2. ارزش خرید حقیقی:</strong> <span id="rmf-signal-2" class="badge">-</span>
+                                                <br><small id="rmf-signal-2-text" class="text-muted">-</small>
+                                            </div>
+                                            <div class="mb-2">
+                                                <strong>3. ارزش فروش حقیقی:</strong> <span id="rmf-signal-3" class="badge">-</span>
+                                                <br><small id="rmf-signal-3-text" class="text-muted">-</small>
+                                            </div>
+                                            <hr>
+                                            <div class="text-center">
+                                                <strong>سیگنال کلی:</strong> <span id="rmf-overall-signal" class="badge" style="font-size: 1.1rem;">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="stats-card">
+                                        <div class="stats-label">قدرت خریدار امروز</div>
+                                        <div class="stats-value" id="rmf-stat-current">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">میانگین وزن‌دار</div>
+                                        <div class="stats-value" id="rmf-stat-avg">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">رتبه‌بندی</div>
+                                        <div class="stats-value" id="rmf-stat-ranking">-</div>
+                                    </div>
+                                    <div class="stats-card">
+                                        <div class="stats-label">تعداد روزها</div>
+                                        <div class="stats-value" id="rmf-stat-days">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-9">
+                                <!-- Loading -->
+                                <div class="loading" id="rmfLoading">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                    <p class="mt-3">در حال محاسبات جریان نقدینگی حقیقی...</p>
+                                </div>
+
+                                <!-- Error -->
+                                <div class="alert alert-danger" id="rmfError" style="display: none;" role="alert">
+                                    <strong>خطا!</strong> <span id="rmfErrorMessage"></span>
+                                </div>
+
+                                <!-- Results Container -->
+                                <div id="rmfResultsContainer" style="display: none;">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            داده‌های روز آخر
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p><strong>ارزش خرید حقیقی:</strong> <span id="rmf-buy-value">-</span> ریال</p>
+                                                    <p><strong>تعداد خریداران حقیقی:</strong> <span id="rmf-buy-count">-</span></p>
+                                                    <p><strong>سرانه خرید حقیقی:</strong> <span id="rmf-buy-basket">-</span> ریال</p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>ارزش فروش حقیقی:</strong> <span id="rmf-sell-value">-</span> ریال</p>
+                                                    <p><strong>تعداد فروشندگان حقیقی:</strong> <span id="rmf-sell-count">-</span></p>
+                                                    <p><strong>سرانه فروش حقیقی:</strong> <span id="rmf-sell-basket">-</span> ریال</p>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <h5 class="text-center"><strong>قدرت خریدار:</strong> <span id="rmf-buyer-power">-</span></h5>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <h5>تفسیر قدرت خریدار:</h5>
+                                        <ul>
+                                            <li><strong>قدرت > 3:</strong> قدرت خریدار بسیار بالا (سبز پررنگ)</li>
+                                            <li><strong>قدرت 1.5 تا 3:</strong> قدرت خریدار بالا (سبز)</li>
+                                            <li><strong>قدرت 1 تا 1.5:</strong> قدرت خریدار کم (سبز کم‌رنگ)</li>
+                                            <li><strong>قدرت 0.67 تا 1:</strong> قدرت فروشنده کم (قرمز کم‌رنگ)</li>
+                                            <li><strong>قدرت 0.33 تا 0.67:</strong> قدرت فروشنده متوسط (قرمز)</li>
+                                            <li><strong>قدرت < 0.33:</strong> قدرت فروشنده بسیار بالا (قرمز پررنگ)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Initial Message -->
+                                <div id="rmfInitialMessage" class="placeholder-tab">
+                                    <div style="font-size: 4rem; margin-bottom: 20px;">💰</div>
+                                    <h5>تحلیل جریان نقدینگی حقیقی</h5>
+                                    <p>لطفاً تنظیمات را انجام دهید و دکمه محاسبه را بزنید</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 6: Summary Dashboard -->
+                    <div class="tab-pane fade" id="tab6" role="tabpanel" aria-labelledby="tab6-tab">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="text-center mb-4">
+                                    <h3 style="color: var(--accent-primary); font-weight: 700;">
+                                        🎯 داشبورد خلاصه سیگنال‌ها
+                                    </h3>
+                                    <p style="color: var(--text-secondary);">نمای کلی از سیگنال‌های 5 اندیکاتور برای یک نماد</p>
+                                </div>
+
+                                <!-- Summary Form -->
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <form id="summaryForm" class="row g-3 align-items-end">
+                                            <div class="col-md-4">
+                                                <label for="summary_symbol" class="form-label">نماد سهم</label>
+                                                <select class="form-select" id="summary_symbol" name="symbol" required>
+                                                    <option value="">نماد را انتخاب کنید...</option>
+                                                    {% for sym in symbols %}
+                                                    <option value="{{ sym }}">{{ sym }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="summary_end_date" class="form-label">تاریخ پایان</label>
+                                                <input type="text" class="form-control" id="summary_end_date" 
+                                                       name="end_date" value="{{ today }}" required>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="summary_timeframe" class="form-label">بازه زمانی</label>
+                                                <select class="form-select" id="summary_timeframe" name="timeframe">
+                                                    <option value="daily" selected>روزانه</option>
+                                                    <option value="weekly">هفتگی</option>
+                                                    <option value="monthly">ماهانه</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button type="submit" class="btn btn-primary w-100">
+                                                    🔍 محاسبه همه
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- Loading -->
+                                <div class="loading" id="summaryLoading" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                    <p class="mt-3">در حال محاسبه سیگنال‌ها...</p>
+                                </div>
+
+                                <!-- Error -->
+                                <div class="alert alert-danger" id="summaryError" style="display: none;" role="alert">
+                                    <strong>خطا!</strong> <span id="summaryErrorMessage"></span>
+                                </div>
+
+                                <!-- Summary Results -->
+                                <div id="summaryResults" style="display: none;">
+                                    <!-- Signal Cards Grid -->
+                                    <div class="row g-4 mb-4">
+                                        <!-- Card 1: Moving Average -->
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card signal-card" id="card-ma">
+                                                <div class="card-header">
+                                                    <h5>📈 میانگین متحرک (MA)</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="signal-badge" id="signal-ma-badge">-</div>
+                                                    <div class="signal-detail" id="signal-ma-detail">-</div>
+                                                    <a href="#" onclick="switchToTab('tab1'); return false;" class="btn btn-sm btn-outline-primary mt-3">
+                                                        مشاهده جزئیات
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2: Divergence -->
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card signal-card" id="card-divergence">
+                                                <div class="card-header">
+                                                    <h5>📉 واگرایی (Divergence)</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="signal-badge" id="signal-divergence-badge">-</div>
+                                                    <div class="signal-detail" id="signal-divergence-detail">-</div>
+                                                    <a href="#" onclick="switchToTab('tab2'); return false;" class="btn btn-sm btn-outline-primary mt-3">
+                                                        مشاهده جزئیات
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 3: Beta -->
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card signal-card" id="card-beta">
+                                                <div class="card-header">
+                                                    <h5>📊 ضریب بتا (Beta)</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="signal-badge" id="signal-beta-badge">-</div>
+                                                    <div class="signal-detail" id="signal-beta-detail">-</div>
+                                                    <a href="#" onclick="switchToTab('tab3'); return false;" class="btn btn-sm btn-outline-primary mt-3">
+                                                        مشاهده جزئیات
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 4: Volume -->
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card signal-card" id="card-volume">
+                                                <div class="card-header">
+                                                    <h5>💹 حجم معاملات (Volume)</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="signal-badge" id="signal-volume-badge">-</div>
+                                                    <div class="signal-detail" id="signal-volume-detail">-</div>
+                                                    <a href="#" onclick="switchToTab('tab4'); return false;" class="btn btn-sm btn-outline-primary mt-3">
+                                                        مشاهده جزئیات
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 5: RMF -->
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card signal-card" id="card-rmf">
+                                                <div class="card-header">
+                                                    <h5>💰 جریان نقدینگی (RMF)</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="signal-badge" id="signal-rmf-badge">-</div>
+                                                    <div class="signal-detail" id="signal-rmf-detail">-</div>
+                                                    <a href="#" onclick="switchToTab('tab5'); return false;" class="btn btn-sm btn-outline-primary mt-3">
+                                                        مشاهده جزئیات
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Overall Signal -->
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card signal-card" id="card-overall">
+                                                <div class="card-header">
+                                                    <h5>🎯 سیگنال کلی</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="signal-badge" id="signal-overall-badge">-</div>
+                                                    <div class="signal-detail" id="signal-overall-detail">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Initial Message -->
+                                <div id="summaryInitialMessage" class="placeholder-tab">
+                                    <div style="font-size: 4rem; margin-bottom: 20px;">🎯</div>
+                                    <h5>داشبورد خلاصه سیگنال‌ها</h5>
+                                    <p>نماد سهم را انتخاب کرده و دکمه "محاسبه همه" را بزنید</p>
+                                    <p style="color: var(--text-muted); font-size: 0.9rem;">
+                                        این صفحه سیگنال‌های 5 اندیکاتور را با پارامترهای پیش‌فرض محاسبه می‌کند
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        console.log('🚀 JavaScript execution started...');
+        
+        // Wait for page to fully load
+        window.addEventListener('load', function() {
+            // Check if Plotly loaded successfully
+            if (typeof Plotly === 'undefined') {
+                console.error('Plotly failed to load!');
+            } else {
+                console.log('Plotly loaded successfully');
+            }
+        });
+        
+        console.log('✅ Load event listener attached');
+        
+        // ===========================
+        // GLOBAL UTILITY FUNCTIONS (must be outside DOMContentLoaded for onclick access)
+        // ===========================
+        
+        // Tab Navigation Helper
+        function switchToTab(tabId) {
+            console.log('switchToTab called for:', tabId);
+            const tabButton = document.getElementById(tabId + '-tab');
+            if (tabButton) {
+                const tab = new bootstrap.Tab(tabButton);
+                tab.show();
+            } else {
+                console.error('Tab button not found:', tabId);
+            }
+        }
+        
+        console.log('✅ Global functions defined');
+        
+        // Symbol Selection Functions
+        function selectSymbol(symbol, inputId, selectId, dropdownId) {
+            document.getElementById(inputId).value = symbol;
+            document.getElementById(selectId).value = symbol;
+            hideSymbolDropdown(dropdownId);
+        }
+        
+        function filterSymbols(searchText, dropdownId, selectId) {
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) return;
+            
+            const items = dropdown.querySelectorAll('.symbol-item');
+            searchText = searchText.toLowerCase().trim();
+            
+            if (searchText === '') {
+                items.forEach(item => item.style.display = 'flex');
+                return;
+            }
+            
+            items.forEach(item => {
+                const symbolName = item.querySelector('.symbol-name');
+                if (symbolName) {
+                    const text = symbolName.textContent.toLowerCase();
+                    if (text.includes(searchText)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        function showSymbolDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            if (dropdown) {
+                dropdown.classList.add('show');
+            }
+        }
+        
+        function hideSymbolDropdown(dropdownId) {
+            setTimeout(() => {
+                const dropdown = document.getElementById(dropdownId);
+                if (dropdown) {
+                    dropdown.classList.remove('show');
+                }
+            }, 200);
+        }
+        
+        // Toast Notifications
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast-notification toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                .toast-notification {
+                    position: fixed;
+                    top: 100px;
+                    left: 20px;
+                    padding: 16px 24px;
+                    border-radius: 12px;
+                    backdrop-filter: blur(20px);
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    animation: slideInLeft 0.4s ease-out;
+                }
+                
+                .toast-success {
+                    background: rgba(0, 255, 136, 0.9);
+                    color: white;
+                }
+                
+                .toast-error {
+                    background: rgba(255, 71, 87, 0.9);
+                    color: white;
+                }
+                
+                @keyframes slideInLeft {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-100px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+            `;
+            
+            if (!document.querySelector('style[data-toast]')) {
+                style.setAttribute('data-toast', 'true');
+                document.head.appendChild(style);
+            }
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideInLeft 0.4s ease-out reverse';
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+        
+        // ===========================
+        // Wait for DOM to be fully loaded before attaching event listeners
+        // ===========================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing application...');
+            
+            // Load saved theme on page load
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            
+            if (icon && text) {
+                if (savedTheme === 'dark') {
+                    icon.className = 'fas fa-moon';
+                    text.textContent = 'حالت تاریک';
+                } else {
+                    icon.className = 'fas fa-sun';
+                    text.textContent = 'حالت روشن';
+                }
+            }
+            
+            console.log('Attaching form handlers...');
+        
+        // Form submission handler for Moving Average (Tab 1)
+        const maForm = document.getElementById('maForm');
+        if (maForm) {
+            maForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('MA Form submitted');
+            
+            // Hide previous results and errors
+            document.getElementById('initialMessage').style.display = 'none';
+            document.getElementById('chartContainer').style.display = 'none';
+            document.getElementById('errorAlert').style.display = 'none';
+            document.getElementById('statistics').style.display = 'none';
+            
+            // Show loading spinner
+            document.getElementById('loading').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/calculate_ma', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.error) {
+                    // Show error
+                    document.getElementById('errorMessage').textContent = data.error;
+                    document.getElementById('errorAlert').style.display = 'block';
+                } else {
+                    // Show chart
+                    const chartData = JSON.parse(data.chart);
+                    
+                    // Check if Plotly is loaded
+                    if (typeof Plotly === 'undefined') {
+                        document.getElementById('errorMessage').textContent = 'خطا: کتابخانه Plotly بارگذاری نشده است. لطفاً صفحه را رفرش کنید.';
+                        document.getElementById('errorAlert').style.display = 'block';
+                        return;
+                    }
+                    
+                    Plotly.newPlot('chart', chartData.data, chartData.layout, {responsive: true});
+                    document.getElementById('chartContainer').style.display = 'block';
+                    
+                    // Update statistics
+                    if (data.stats) {
+                        document.getElementById('stat-total-candles').textContent = data.stats.total_candles;
+                        document.getElementById('stat-start-date').textContent = data.stats.start_date;
+                        document.getElementById('stat-end-date').textContent = data.stats.end_date;
+                        document.getElementById('stat-current-price').textContent = 
+                            data.stats.current_price.toLocaleString('fa-IR') + ' ریال';
+                        
+                        // Display all MA values
+                        if (data.stats.ma_values && Object.keys(data.stats.ma_values).length > 0) {
+                            let maText = '';
+                            for (const [period, value] of Object.entries(data.stats.ma_values)) {
+                                if (value !== null) {
+                                    maText += `MA-${period}: ${value.toLocaleString('fa-IR', {maximumFractionDigits: 1})} | `;
+                                }
+                            }
+                            document.getElementById('stat-current-ma').textContent = maText.slice(0, -3);
+                        } else {
+                            document.getElementById('stat-current-ma').textContent = 'در دسترس نیست';
+                        }
+                        
+                        if (data.stats.price_vs_ma) {
+                            const status = data.stats.price_vs_ma.status;
+                            const percentage = data.stats.price_vs_ma.percentage;
+                            
+                            let statusClass = 'neutral';
+                            if (status === 'بالاتر') {
+                                statusClass = 'positive';
+                            } else if (status === 'پایین‌تر') {
+                                statusClass = 'negative';
+                            }
+                            
+                            document.getElementById('stat-status').innerHTML = 
+                                `<span class="${statusClass}">${status} از میانگین</span>`;
+                            document.getElementById('stat-percentage').innerHTML = 
+                                `<span class="${statusClass}">${percentage.toFixed(2)}%</span>`;
+                        } else {
+                            document.getElementById('stat-status').textContent = 'در دسترس نیست';
+                            document.getElementById('stat-percentage').textContent = 'در دسترس نیست';
+                        }
+                        
+                        document.getElementById('statistics').style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+                
+                // Show error
+                document.getElementById('errorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('errorAlert').style.display = 'block';
+            });
+        });
+        } else {
+            console.warn('maForm not found in DOM');
+        }
+
+        // Divergence Form submission handler
+        const divergenceForm = document.getElementById('divergenceForm');
+        if (divergenceForm) {
+            divergenceForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Divergence Form submitted');
+            
+            // Hide previous results and errors
+            document.getElementById('divergenceInitialMessage').style.display = 'none';
+            document.getElementById('divergenceChartsContainer').style.display = 'none';
+            document.getElementById('divergenceError').style.display = 'none';
+            document.getElementById('divergenceStats').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('divergenceLoading').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/calculate_divergence', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading
+                document.getElementById('divergenceLoading').style.display = 'none';
+                
+                if (data.error) {
+                    // Show error
+                    document.getElementById('divergenceErrorMessage').textContent = data.error;
+                    document.getElementById('divergenceError').style.display = 'block';
+                } else {
+                    // Check if Plotly is loaded
+                    if (typeof Plotly === 'undefined') {
+                        document.getElementById('divergenceErrorMessage').textContent = 'خطا: کتابخانه Plotly بارگذاری نشده است';
+                        document.getElementById('divergenceError').style.display = 'block';
+                        return;
+                    }
+                    
+                    // Show RSI chart
+                    const rsiChartData = JSON.parse(data.rsi_chart);
+                    Plotly.newPlot('rsiChart', rsiChartData.data, rsiChartData.layout, {responsive: true});
+                    
+                    // Show MACD chart
+                    const macdChartData = JSON.parse(data.macd_chart);
+                    Plotly.newPlot('macdChart', macdChartData.data, macdChartData.layout, {responsive: true});
+                    
+                    // Show MFI chart
+                    const mfiChartData = JSON.parse(data.mfi_chart);
+                    Plotly.newPlot('mfiChart', mfiChartData.data, mfiChartData.layout, {responsive: true});
+                    
+                    document.getElementById('divergenceChartsContainer').style.display = 'block';
+                    
+                    // Update statistics
+                    if (data.stats) {
+                        document.getElementById('div-stat-candles').textContent = data.stats.total_candles;
+                        document.getElementById('div-stat-rsi-bearish').textContent = data.stats.rsi.bearish_count;
+                        document.getElementById('div-stat-rsi-bullish').textContent = data.stats.rsi.bullish_count;
+                        document.getElementById('div-stat-macd-bearish').textContent = data.stats.macd.bearish_count;
+                        document.getElementById('div-stat-macd-bullish').textContent = data.stats.macd.bullish_count;
+                        document.getElementById('div-stat-mfi-bearish').textContent = data.stats.mfi.bearish_count;
+                        document.getElementById('div-stat-mfi-bullish').textContent = data.stats.mfi.bullish_count;
+                        
+                        if (data.stats.rsi.current_value !== null) {
+                            document.getElementById('div-stat-rsi-current').textContent = 
+                                data.stats.rsi.current_value.toFixed(2);
+                        } else {
+                            document.getElementById('div-stat-rsi-current').textContent = 'N/A';
+                        }
+                        
+                        if (data.stats.macd.current_value !== null) {
+                            document.getElementById('div-stat-macd-current').textContent = 
+                                data.stats.macd.current_value.toFixed(4);
+                        } else {
+                            document.getElementById('div-stat-macd-current').textContent = 'N/A';
+                        }
+                        
+                        if (data.stats.mfi.current_value !== null) {
+                            document.getElementById('div-stat-mfi-current').textContent = 
+                                data.stats.mfi.current_value.toFixed(2);
+                        } else {
+                            document.getElementById('div-stat-mfi-current').textContent = 'N/A';
+                        }
+                        
+                        // Display divergence details
+                        let bearishHTML = '<h6>RSI:</h6>';
+                        if (data.stats.rsi.divergences.bearish.length > 0) {
+                            bearishHTML += '<ul>';
+                            data.stats.rsi.divergences.bearish.forEach((div, idx) => {
+                                bearishHTML += `<li>واگرایی ${idx + 1}: از ${div.dates[0]} به ${div.dates[1]}</li>`;
+                            });
+                            bearishHTML += '</ul>';
+                        } else {
+                            bearishHTML += '<p class="text-muted">واگرایی نزولی یافت نشد</p>';
+                        }
+                        
+                        bearishHTML += '<h6>MACD:</h6>';
+                        if (data.stats.macd.divergences.bearish.length > 0) {
+                            bearishHTML += '<ul>';
+                            data.stats.macd.divergences.bearish.forEach((div, idx) => {
+                                bearishHTML += `<li>واگرایی ${idx + 1}: از ${div.dates[0]} به ${div.dates[1]}</li>`;
+                            });
+                            bearishHTML += '</ul>';
+                        } else {
+                            bearishHTML += '<p class="text-muted">واگرایی نزولی یافت نشد</p>';
+                        }
+                        
+                        document.getElementById('bearishDetails').innerHTML = bearishHTML;
+                        
+                        let bullishHTML = '<h6>RSI:</h6>';
+                        if (data.stats.rsi.divergences.bullish.length > 0) {
+                            bullishHTML += '<ul>';
+                            data.stats.rsi.divergences.bullish.forEach((div, idx) => {
+                                bullishHTML += `<li>واگرایی ${idx + 1}: از ${div.dates[0]} به ${div.dates[1]}</li>`;
+                            });
+                            bullishHTML += '</ul>';
+                        } else {
+                            bullishHTML += '<p class="text-muted">واگرایی صعودی یافت نشد</p>';
+                        }
+                        
+                        bullishHTML += '<h6>MACD:</h6>';
+                        if (data.stats.macd.divergences.bullish.length > 0) {
+                            bullishHTML += '<ul>';
+                            data.stats.macd.divergences.bullish.forEach((div, idx) => {
+                                bullishHTML += `<li>واگرایی ${idx + 1}: از ${div.dates[0]} به ${div.dates[1]}</li>`;
+                            });
+                            bullishHTML += '</ul>';
+                        } else {
+                            bullishHTML += '<p class="text-muted">واگرایی صعودی یافت نشد</p>';
+                        }
+                        
+                        document.getElementById('bullishDetails').innerHTML = bullishHTML;
+                        
+                        document.getElementById('divergenceStats').style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                // Hide loading
+                document.getElementById('divergenceLoading').style.display = 'none';
+                
+                // Show error
+                document.getElementById('divergenceErrorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('divergenceError').style.display = 'block';
+            });
+        });
+        } else {
+            console.warn('divergenceForm not found in DOM');
+        }
+
+        // Beta Form submission handler
+        const betaForm = document.getElementById('betaForm');
+        if (betaForm) {
+            betaForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Beta Form submitted');
+            e.preventDefault();
+            
+            // Hide previous results and errors
+            document.getElementById('betaInitialMessage').style.display = 'none';
+            document.getElementById('betaError').style.display = 'none';
+            document.getElementById('betaStats').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('betaLoading').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/calculate_beta', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading
+                document.getElementById('betaLoading').style.display = 'none';
+                
+                if (data.error) {
+                    // Show error
+                    document.getElementById('betaErrorMessage').textContent = data.error;
+                    document.getElementById('betaError').style.display = 'block';
+                } else {
+                    // Update statistics (NO CHART!)
+                    if (data.stats) {
+                        // Beta value
+                        document.getElementById('beta-stat-value').textContent = 
+                            data.stats.beta.value.toFixed(3);
+                        document.getElementById('beta-stat-interpretation').textContent = 
+                            data.stats.beta.interpretation;
+                        
+                        // Returns
+                        document.getElementById('beta-stat-actual').textContent = 
+                            data.stats.returns.actual.toFixed(2) + '%';
+                        document.getElementById('beta-stat-expected').textContent = 
+                            data.stats.returns.expected.toFixed(2) + '%';
+                        document.getElementById('beta-stat-market').textContent = 
+                            data.stats.returns.market.toFixed(2) + '%';
+                        
+                        // Ratio
+                        if (data.stats.returns.ratio !== null) {
+                            document.getElementById('beta-stat-ratio').textContent = 
+                                data.stats.returns.ratio.toFixed(2) + 'x';
+                        } else {
+                            document.getElementById('beta-stat-ratio').textContent = 'N/A';
+                        }
+                        
+                        // Signal
+                        const signalBadge = document.getElementById('beta-signal-badge');
+                        signalBadge.textContent = data.stats.signal.status;
+                        signalBadge.className = 'signal-badge ' + 
+                            (data.stats.signal.status === 'POSITIVE' ? 'positive' : 'negative');
+                        
+                        document.getElementById('beta-performance-interpretation').textContent = 
+                            data.stats.signal.interpretation;
+                        
+                        // Show statistics panel
+                        document.getElementById('betaStats').style.display = 'block';
+                        showToast('محاسبات بتا با موفقیت انجام شد', 'success');
+                    }
+                }
+            })
+            .catch(error => {
+                document.getElementById('betaLoading').style.display = 'none';
+                document.getElementById('betaErrorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('betaError').style.display = 'block';
+            });
+        });
+        
+            })
+            .catch(error => {
+                // Hide loading
+                document.getElementById('betaLoading').style.display = 'none';
+                
+                // Show error
+                document.getElementById('betaErrorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('betaError').style.display = 'block';
+            });
+        });
+        } else {
+            console.warn('betaForm not found in DOM');
+        }
+
+        // Volume Form submission handler
+        const volumeForm = document.getElementById('volumeForm');
+        if (volumeForm) {
+            volumeForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Volume Form submitted');
+            e.preventDefault();
+            
+            // Hide previous results and errors
+            document.getElementById('volumeInitialMessage').style.display = 'none';
+            document.getElementById('volumeChartContainer').style.display = 'none';
+            document.getElementById('volumeError').style.display = 'none';
+            document.getElementById('volumeStats').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('volumeLoading').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/calculate_volume', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading
+                document.getElementById('volumeLoading').style.display = 'none';
+                
+                if (data.error) {
+                    // Show error
+                    document.getElementById('volumeErrorMessage').textContent = data.error;
+                    document.getElementById('volumeError').style.display = 'block';
+                } else {
+                    // Check if Plotly is loaded
+                    if (typeof Plotly === 'undefined') {
+                        document.getElementById('volumeErrorMessage').textContent = 'خطا: کتابخانه Plotly بارگذاری نشده است';
+                        document.getElementById('volumeError').style.display = 'block';
+                        return;
+                    }
+                    
+                    // Show chart
+                    const chartData = JSON.parse(data.chart);
+                    Plotly.newPlot('volumeChart', chartData.data, chartData.layout, {responsive: true});
+                    document.getElementById('volumeChartContainer').style.display = 'block';
+                    
+                    // Update statistics
+                    if (data.stats) {
+                        document.getElementById('volume-stat-days').textContent = data.stats.total_days;
+                        document.getElementById('volume-stat-start').textContent = data.stats.start_date;
+                        document.getElementById('volume-stat-end').textContent = data.stats.end_date;
+                        
+                        document.getElementById('volume-stat-latest').textContent = 
+                            data.stats.latest_volume.toLocaleString('fa-IR');
+                        document.getElementById('volume-stat-avg').textContent = 
+                            data.stats.avg_volume.toLocaleString('fa-IR', {maximumFractionDigits: 0});
+                        document.getElementById('volume-stat-max').textContent = 
+                            data.stats.max_volume.toLocaleString('fa-IR');
+                        document.getElementById('volume-stat-min').textContent = 
+                            data.stats.min_volume.toLocaleString('fa-IR');
+                        
+                        // Display all MA values
+                        if (data.stats.ma_values) {
+                            let maText = '';
+                            for (const [period, value] of Object.entries(data.stats.ma_values)) {
+                                maText += `MA-${period}: ${Number(value).toLocaleString('fa-IR', {maximumFractionDigits: 0})} | `;
+                            }
+                            document.getElementById('volume-stat-mas').textContent = maText.slice(0, -3);
+                        }
+                        
+                        document.getElementById('volume-stat-status').textContent = data.stats.latest_status;
+                        
+                        if (data.stats.latest_diff_pct !== null) {
+                            const diffPct = data.stats.latest_diff_pct;
+                            const diffElement = document.getElementById('volume-stat-diff');
+                            diffElement.textContent = diffPct.toFixed(2) + '%';
+                            
+                            // Color code based on difference
+                            if (diffPct > 0) {
+                                diffElement.className = 'stats-value positive';
+                            } else if (diffPct < 0) {
+                                diffElement.className = 'stats-value negative';
+                            } else {
+                                diffElement.className = 'stats-value neutral';
+                            }
+                        } else {
+                            document.getElementById('volume-stat-diff').textContent = 'در دسترس نیست';
+                        }
+                        
+                        document.getElementById('volumeStats').style.display = 'block';
+                    }
+                }
+            })
+            .catch(error => {
+                // Hide loading
+                document.getElementById('volumeLoading').style.display = 'none';
+                
+                // Show error
+                document.getElementById('volumeErrorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('volumeError').style.display = 'block';
+            });
+        });
+        } else {
+            console.warn('volumeForm not found in DOM');
+        }
+
+        // Real Money Flow Form submission handler
+        const rmfForm = document.getElementById('rmfForm');
+        if (rmfForm) {
+            rmfForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('RMF Form submitted');
+            e.preventDefault();
+            
+            // Hide previous results and errors
+            document.getElementById('rmfInitialMessage').style.display = 'none';
+            document.getElementById('rmfResultsContainer').style.display = 'none';
+            document.getElementById('rmfError').style.display = 'none';
+            document.getElementById('rmfStats').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('rmfLoading').style.display = 'block';
+            
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Send AJAX request
+            fetch('/calculate_real_money_flow', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading
+                document.getElementById('rmfLoading').style.display = 'none';
+                
+                if (data.error) {
+                    // Show error
+                    document.getElementById('rmfErrorMessage').textContent = data.error;
+                    document.getElementById('rmfError').style.display = 'block';
+                } else {
+                    // Get latest day's data
+                    const latestDay = data.daily_metrics[data.daily_metrics.length - 1];
+                    
+                    // Update today's data
+                    document.getElementById('rmf-buy-value').textContent = 
+                        latestDay.real_buy_value.toLocaleString('fa-IR');
+                    document.getElementById('rmf-sell-value').textContent = 
+                        latestDay.real_sell_value.toLocaleString('fa-IR');
+                    document.getElementById('rmf-buy-count').textContent = 
+                        latestDay.real_buy_count.toLocaleString('fa-IR');
+                    document.getElementById('rmf-sell-count').textContent = 
+                        latestDay.real_sell_count.toLocaleString('fa-IR');
+                    document.getElementById('rmf-buy-basket').textContent = 
+                        latestDay.real_buy_basket.toLocaleString('fa-IR', {maximumFractionDigits: 0});
+                    document.getElementById('rmf-sell-basket').textContent = 
+                        latestDay.real_sell_basket.toLocaleString('fa-IR', {maximumFractionDigits: 0});
+                    document.getElementById('rmf-buyer-power').textContent = 
+                        latestDay.buyer_power.toFixed(3);
+                    
+                    // Show results
+                    document.getElementById('rmfResultsContainer').style.display = 'block';
+                    
+                    // Update 3 separate signals
+                    if (data.signals && data.signal_interpretations) {
+                        // Signal 1: Buyer Power
+                        const signal1 = document.getElementById('rmf-signal-1');
+                        signal1.textContent = data.signals.buyer_power;
+                        signal1.className = 'badge ' + (data.signals.buyer_power === 'POSITIVE' ? 'bg-success' : 'bg-danger');
+                        document.getElementById('rmf-signal-1-text').textContent = data.signal_interpretations.buyer_power;
+                        
+                        // Signal 2: Buy Value
+                        const signal2 = document.getElementById('rmf-signal-2');
+                        signal2.textContent = data.signals.buy_value;
+                        signal2.className = 'badge ' + (data.signals.buy_value === 'POSITIVE' ? 'bg-success' : 'bg-danger');
+                        document.getElementById('rmf-signal-2-text').textContent = data.signal_interpretations.buy_value;
+                        
+                        // Signal 3: Sell Value
+                        const signal3 = document.getElementById('rmf-signal-3');
+                        signal3.textContent = data.signals.sell_value;
+                        signal3.className = 'badge ' + (data.signals.sell_value === 'POSITIVE' ? 'bg-success' : 'bg-danger');
+                        document.getElementById('rmf-signal-3-text').textContent = data.signal_interpretations.sell_value;
+                        
+                        // Overall Signal
+                        const overallSignal = document.getElementById('rmf-overall-signal');
+                        overallSignal.textContent = data.signal;
+                        overallSignal.className = 'badge ' + (data.signal === 'POSITIVE' ? 'bg-success' : 'bg-danger');
+                        overallSignal.style.fontSize = '1.1rem';
+                    }
+                    
+                    // Update statistics
+                    const currentPowerElement = document.getElementById('rmf-stat-current');
+                    currentPowerElement.textContent = data.current_power.toFixed(3);
+                    
+                    // Color code based on ranking
+                    currentPowerElement.className = 'stats-value';
+                    if (data.ranking_class.includes('very_high')) {
+                        currentPowerElement.classList.add('positive');
+                        currentPowerElement.style.fontWeight = 'bold';
+                    } else if (data.ranking_class.includes('high')) {
+                        currentPowerElement.classList.add('positive');
+                    } else if (data.ranking_class.includes('low') && !data.ranking_class.includes('negative')) {
+                        currentPowerElement.style.color = '#90ee90';
+                    } else if (data.ranking_class.includes('very_negative')) {
+                        currentPowerElement.classList.add('negative');
+                        currentPowerElement.style.fontWeight = 'bold';
+                    } else if (data.ranking_class.includes('negative')) {
+                        currentPowerElement.classList.add('negative');
+                    }
+                    
+                    document.getElementById('rmf-stat-avg').textContent = 
+                        data.weighted_avg_power.toFixed(3);
+                    
+                    const signalElement = document.getElementById('rmf-stat-signal');
+                    signalElement.textContent = data.signal === 'POSITIVE' ? 'مثبت (سبز)' : 'منفی (قرمز)';
+                    signalElement.className = data.signal === 'POSITIVE' ? 'stats-value positive' : 'stats-value negative';
+                    
+                    document.getElementById('rmf-stat-ranking').textContent = data.ranking;
+                    document.getElementById('rmf-stat-days').textContent = data.statistics.total_days;
+                    document.getElementById('rmf-stat-avg-power').textContent = 
+                        data.statistics.avg_buyer_power.toFixed(3);
+                    
+                    document.getElementById('rmfStats').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                // Hide loading
+                document.getElementById('rmfLoading').style.display = 'none';
+                
+                // Show error
+                document.getElementById('rmfErrorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('rmfError').style.display = 'block';
+            });
+        });
+        } else {
+            console.warn('rmfForm not found in DOM');
+        }
+        
+        // Summary Form submission handler (Tab 6)
+        const summaryForm = document.getElementById('summaryForm');
+        if (summaryForm) {
+            summaryForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Summary Form submitted');
+                    
+                    // Hide previous results
+                    document.getElementById('summaryInitialMessage').style.display = 'none';
+                    document.getElementById('summaryResults').style.display = 'none';
+                    document.getElementById('summaryError').style.display = 'none';
+                    
+                    // Show loading
+                    document.getElementById('summaryLoading').style.display = 'block';
+                    
+                    // Get form data
+                    const formData = new FormData(this);
+                    
+                    // Send AJAX request
+                    fetch('/calculate_summary', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Hide loading
+                        document.getElementById('summaryLoading').style.display = 'none';
+                        
+                        if (data.error) {
+                            document.getElementById('summaryErrorMessage').textContent = data.error;
+                            document.getElementById('summaryError').style.display = 'block';
+                            return;
+                        }
+                        
+                        // Update signal cards
+                        updateSignalCard('ma', data.indicators.ma);
+                        updateSignalCard('divergence', data.indicators.divergence);
+                        updateSignalCard('beta', data.indicators.beta);
+                        updateSignalCard('volume', data.indicators.volume);
+                        updateSignalCard('rmf', data.indicators.rmf);
+                        
+                        // Update overall signal
+                        const overallBadge = document.getElementById('signal-overall-badge');
+                        const overallDetail = document.getElementById('signal-overall-detail');
+                        
+                        overallBadge.textContent = data.overall.signal;
+                        overallBadge.className = 'signal-badge ' + 
+                            (data.overall.signal === 'POSITIVE' ? 'positive' : 
+                             data.overall.signal === 'NEGATIVE' ? 'negative' : 'neutral');
+                        
+                        overallDetail.innerHTML = `
+                            مثبت: ${data.overall.positive_count} | 
+                            منفی: ${data.overall.negative_count}<br>
+                            <small>از ${data.overall.total_count} اندیکاتور</small>
+                        `;
+                        
+                        // Show results
+                        document.getElementById('summaryResults').style.display = 'block';
+                        showToast('محاسبات با موفقیت انجام شد', 'success');
+                    })
+                    .catch(error => {
+                        document.getElementById('summaryLoading').style.display = 'none';
+                        document.getElementById('summaryErrorMessage').textContent = 'خطا در ارتباط با سرور: ' + error;
+                document.getElementById('summaryError').style.display = 'block';
+            });
+        });
+        } else {
+            console.warn('summaryForm not found in DOM');
+        }
+        
+        // Helper function to update individual signal cards
+        function updateSignalCard(indicator, data) {
+            const badge = document.getElementById(`signal-${indicator}-badge`);
+            const detail = document.getElementById(`signal-${indicator}-detail`);
+            
+            if (!badge || !detail) return;
+            
+            const signal = data.signal || 'NO_DATA';
+            
+            // Update badge
+            badge.textContent = signal;
+            badge.className = 'signal-badge ' + 
+                (signal === 'POSITIVE' ? 'positive' : 
+                 signal === 'NEGATIVE' ? 'negative' : 
+                 signal === 'ERROR' ? 'no-data' : 'no-data');
+            
+            // Update detail based on indicator type
+            let detailText = '';
+            
+            switch(indicator) {
+                case 'ma':
+                    if (data.current_price && data.ma_value) {
+                        detailText = `قیمت: ${data.current_price.toLocaleString('fa-IR')}<br>`;
+                        detailText += `MA: ${data.ma_value.toLocaleString('fa-IR')}<br>`;
+                        detailText += `<span class="${signal === 'POSITIVE' ? 'positive' : 'negative'}">${data.difference_pct.toFixed(2)}%</span>`;
+                    } else {
+                        detailText = data.error || 'داده کافی نیست';
+                    }
+                    break;
+                    
+                case 'divergence':
+                    if (data.total_bullish !== undefined) {
+                        detailText = `صعودی: ${data.total_bullish}<br>`;
+                        detailText += `نزولی: ${data.total_bearish}<br>`;
+                        detailText += `<small>RSI: ${data.rsi.bullish}/${data.rsi.bearish} | `;
+                        detailText += `MACD: ${data.macd.bullish}/${data.macd.bearish} | `;
+                        detailText += `MFI: ${data.mfi.bullish}/${data.mfi.bearish}</small>`;
+                    } else {
+                        detailText = data.error || 'داده کافی نیست';
+                    }
+                    break;
+                    
+                case 'beta':
+                    if (data.beta_value !== undefined) {
+                        detailText = `بتا: ${data.beta_value.toFixed(2)}<br>`;
+                        detailText += `نسبت بازده: ${data.return_ratio ? data.return_ratio.toFixed(2) : 'N/A'}<br>`;
+                        detailText += `<small>${data.interpretation || ''}</small>`;
+                    } else {
+                        detailText = data.error || 'داده کافی نیست';
+                    }
+                    break;
+                    
+                case 'volume':
+                    if (data.current_volume && data.ma_value) {
+                        detailText = `حجم: ${(data.current_volume/1000000).toFixed(1)}M<br>`;
+                        detailText += `میانگین: ${(data.ma_value/1000000).toFixed(1)}M<br>`;
+                        detailText += `<span class="${signal === 'POSITIVE' ? 'positive' : 'negative'}">${data.difference_pct.toFixed(2)}%</span>`;
+                    } else {
+                        detailText = data.error || 'داده کافی نیست';
+                    }
+                    break;
+                    
+                case 'rmf':
+                    if (data.buyer_power !== undefined) {
+                        detailText = `قدرت خریدار: ${data.buyer_power.toFixed(2)}<br>`;
+                        detailText += `میانگین وزن‌دار: ${data.weighted_avg.toFixed(2)}<br>`;
+                        detailText += `<small>${data.ranking || ''}</small>`;
+                    } else {
+                        detailText = data.error || 'داده کافی نیست';
+                    }
+                    break;
+            }
+            
+            detail.innerHTML = detailText;
+        }
+        
+        // Log successful form handler initialization
+        console.log('✅ All form handlers attached successfully');
+        
+        }); // End of DOMContentLoaded for form handlers
+    </script>
+    
+    <!-- Theme Toggle & Enhanced UI Features -->
+    <script>
+        // ===========================
+        // Theme Toggle with LocalStorage
+        // ===========================
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update icon and text
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            
+            if (newTheme === 'dark') {
+                icon.className = 'fas fa-moon';
+                text.textContent = 'حالت تاریک';
+            } else {
+                icon.className = 'fas fa-sun';
+                text.textContent = 'حالت روشن';
+            }
+            
+            // Update all Plotly charts with new theme
+            updateChartThemes(newTheme);
+        }
+        
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            
+            if (icon && text) {
+                if (savedTheme === 'dark') {
+                    icon.className = 'fas fa-moon';
+                    text.textContent = 'حالت تاریک';
+                } else {
+                    icon.className = 'fas fa-sun';
+                    text.textContent = 'حالت روشن';
+                }
+            }
+        });
+        
+        // ===========================
+        // Update Plotly Chart Themes
+        // ===========================
+        function updateChartThemes(theme) {
+            const isDark = theme === 'dark';
+            const update = {
+                'paper_bgcolor': isDark ? '#1e2936' : '#ffffff',
+                'plot_bgcolor': isDark ? '#0a1929' : '#fafafa',
+                'font.color': isDark ? '#e0e0e0' : '#333333',
+                'xaxis.gridcolor': isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+                'yaxis.gridcolor': isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            };
+            
+            // Update all existing charts
+            const chartIds = ['chart', 'rsiChart', 'macdChart', 'mfiChart', 'betaChart', 'volumeChart'];
+            chartIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element && element.data) {
+                    Plotly.relayout(id, update);
+                }
+            });
+        }
+        
+        // ===========================
+        // Enhanced Number Formatting
+        // ===========================
+        function formatNumber(num, decimals = 0) {
+            if (num === null || num === undefined) return 'N/A';
+            return num.toLocaleString('fa-IR', { 
+                maximumFractionDigits: decimals,
+                minimumFractionDigits: decimals
+            });
+        }
+        
+        function formatLargeNumber(num) {
+            if (num === null || num === undefined) return 'N/A';
+            if (num >= 1000000000) {
+                return (num / 1000000000).toFixed(1) + 'B';
+            } else if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // ===========================
+        // Animated Counter
+        // ===========================
+        function animateValue(element, start, end, duration = 1000) {
+            const range = end - start;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = start + (range * easeOut);
+                
+                element.textContent = formatNumber(current);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+        
+        // ===========================
+        // Smooth Scroll
+        // ===========================
+        function smoothScrollTo(element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }
+        
+        // ===========================
+        // Loading State Management
+        // ===========================
+        function showLoading(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="loading show">
+                        <div class="spinner-modern"></div>
+                        <p style="color: var(--text-secondary); margin-top: 16px;">
+                            <i class="fas fa-chart-line"></i> در حال پردازش داده‌ها...
+                        </p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Close dropdown when clicking outside (utility event)
+        document.addEventListener('click', function(event) {
+            const searchContainers = document.querySelectorAll('.symbol-search-container');
+            searchContainers.forEach(container => {
+                if (!container.contains(event.target)) {
+                    const dropdown = container.querySelector('.symbol-dropdown');
+                    if (dropdown) {
+                        dropdown.classList.remove('show');
+                    }
+                }
+            });
+        });
+        
+        // ===========================
+        // Chart Toolbar Functions
+        // ===========================
+        function exportChart(chartId) {
+            const chart = document.getElementById(chartId);
+            if (chart && window.Plotly) {
+                Plotly.downloadImage(chartId, {
+                    format: 'png',
+                    width: 1920,
+                    height: 1080,
+                    filename: `faraz_energy_chart_${Date.now()}`
+                });
+                showToast('نمودار با موفقیت ذخیره شد', 'success');
+            }
+        }
+        
+        function fullscreenChart(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            }
+        }
+        
+        function resetChart(chartId) {
+            const chart = document.getElementById(chartId);
+            if (chart && window.Plotly) {
+                Plotly.relayout(chartId, {
+                    'xaxis.autorange': true,
+                    'yaxis.autorange': true
+                });
+                showToast('نمودار بازنشانی شد', 'success');
+            }
+        }
+        
+        // Log successful initialization
+        console.log('🎨 Neo-Financial UI initialized successfully!');
+        console.log('✅ All features loaded');
+        console.log('✅ 6 Tabs including Summary Dashboard');
+    </script>
+</body>
+</html>

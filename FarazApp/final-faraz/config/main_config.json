@@ -1,0 +1,27 @@
+{
+    "necessary_directories":{
+        "watchlists_download_path":"downloads",
+        "watchlists_temp_path":"downloads/temp",
+        "logs_path":"logs",
+        "signals_path":"signals",
+        "signals_acd_path":"signals/acd"
+    },
+
+    "database_bsp_config":{
+        "host": "localhost",
+        "port": 5432,
+        "user": "bsp_admin",
+        "password": "Ovbcz-1944",
+        "database": "bsp_db"
+    },
+
+    "database_original_config":{
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "password": "Ovbcz-1944",
+        "database": "postgres"
+    },
+    "stock_start_time":"09:00:00",
+    "stock_duration_hours": 4
+}
